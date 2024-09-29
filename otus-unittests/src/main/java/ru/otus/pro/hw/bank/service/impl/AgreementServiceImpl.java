@@ -25,6 +25,4 @@ public class AgreementServiceImpl implements AgreementService {
     public Optional<Agreement> findByName(String name) {
         return agreementDao.findByName(name);
     }
-
-
 }

@@ -42,7 +42,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public boolean charge(Long accountId, BigDecimal chargeAmount) {
-        Account account= accountDao.findById(accountId)
+        Account account = accountDao.findById(accountId)
                 .orElseThrow(() -> new AccountException("No source account"));
         account.setAmount(account.getAmount().subtract(chargeAmount));
         accountDao.save(account);
@@ -75,5 +75,4 @@ public class AccountServiceImpl implements AccountService {
 
         return true;
     }
-
 }

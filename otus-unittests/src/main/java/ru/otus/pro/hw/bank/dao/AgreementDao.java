@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class AgreementDao {
 
+
     HashMap<Long, Agreement> agreementMap = new HashMap<>();
 
     AtomicLong id = new AtomicLong(0);

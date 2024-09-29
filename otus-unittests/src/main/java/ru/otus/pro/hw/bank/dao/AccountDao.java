@@ -1,7 +1,6 @@
 package ru.otus.pro.hw.bank.dao;
 
 
-
 import ru.otus.pro.hw.bank.entity.Account;
 
 import java.util.HashMap;
@@ -9,7 +8,6 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class AccountDao {
-
     HashMap<Long, Account> accountMap = new HashMap<>();
 
     AtomicLong id = new AtomicLong(1);
@@ -39,6 +37,4 @@ public class AccountDao {
     public Iterable<Account> findAll() {
         return accountMap.values();
     }
-
-
 }
