@@ -21,33 +21,47 @@ public class PaymentProcessorImpl implements PaymentProcessor {
         Account sourceAccount = accountService.getAccounts(source).stream()
                 .filter(account -> account.getType() == sourceType)
                 .findAny()
-                .orElseThrow(() -> new AccountException("Account not found"));
+                .orElseThrow(() -> new AccountException("No source account"));
 
         Account destinationAccount = accountService.getAccounts(destination).stream()
                 .filter(account -> account.getType() == destinationType)
                 .findAny()
-                .orElseThrow(() -> new AccountException("Account not found"));
+                .orElseThrow(() -> new AccountException("No destination account"));
 
         return accountService.makeTransfer(sourceAccount.getId(), destinationAccount.getId(), amount);
     }
 
     @Override
-    public boolean makeTransferWithComission(Agreement source, Agreement destination,
-                                             int sourceType, int destinationType,
+    public boolean makeTransferWithComission(Agreement source,
+                                             Agreement destination,
+                                             int sourceType,
+                                             int destinationType,
                                              BigDecimal amount,
                                              BigDecimal comissionPercent) {
 
         Account sourceAccount = accountService.getAccounts(source).stream()
                 .filter(account -> account.getType() == sourceType)
                 .findAny()
-                .orElseThrow(() -> new AccountException("Account not found"));
+                .orElseThrow(() -> new AccountException("No source account"));
 
         Account destinationAccount = accountService.getAccounts(destination).stream()
                 .filter(account -> account.getType() == destinationType)
                 .findAny()
-                .orElseThrow(() -> new AccountException("Account not found"));
+                .orElseThrow(() -> new AccountException("No destination account"));
+        var commissionValue = amount.multiply(comissionPercent);
+        var amountWithCommition = amount.add(commissionValue);
 
-        accountService.charge(sourceAccount.getId(), amount.negate().multiply(comissionPercent));
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            return false;
+        }
+
+        if (sourceAccount.getAmount().compareTo(amountWithCommition) < 0) {
+            return false;
+        }
+
+        if (!accountService.charge(sourceAccount.getId(), commissionValue.negate())) {
+            return false;
+        }
 
         return accountService.makeTransfer(sourceAccount.getId(), destinationAccount.getId(), amount);
     }
