@@ -44,7 +44,14 @@ public class AccountServiceImpl implements AccountService {
     public boolean charge(Long accountId, BigDecimal chargeAmount) {
         Account account = accountDao.findById(accountId)
                 .orElseThrow(() -> new AccountException("No source account"));
-        account.setAmount(account.getAmount().subtract(chargeAmount));
+        if (chargeAmount.compareTo(BigDecimal.ZERO) == 0) {
+            return false;
+        }
+        if (chargeAmount.compareTo(BigDecimal.ZERO) < 0 &&
+                account.getAmount().compareTo(chargeAmount.negate()) < 0) {
+            return false;
+        }
+        account.setAmount(account.getAmount().add(chargeAmount));
         accountDao.save(account);
         return true;
     }
@@ -54,21 +61,21 @@ public class AccountServiceImpl implements AccountService {
     }
 
     public boolean makeTransfer(Long sourceAccountId, Long destinationAccountId, BigDecimal sum) {
+
         Account sourceAccount = accountDao.findById(sourceAccountId)
                 .orElseThrow(() -> new AccountException("No source account"));
         Account destinationAccount = accountDao.findById(destinationAccountId)
                 .orElseThrow(() -> new AccountException("No destination account"));
 
-        sourceAccount.setAmount(sourceAccount.getAmount().subtract(sum));
-        destinationAccount.setAmount(destinationAccount.getAmount().add(sum));
-
+        if (sum.compareTo(BigDecimal.ZERO) <= 0) {
+            return false;
+        }
         if (sourceAccount.getAmount().compareTo(sum) < 0) {
             return false;
         }
 
-        if (sum.compareTo(BigDecimal.ZERO) <= 0) {
-            return false;
-        }
+        sourceAccount.setAmount(sourceAccount.getAmount().subtract(sum));
+        destinationAccount.setAmount(destinationAccount.getAmount().add(sum));
 
         accountDao.save(sourceAccount);
         accountDao.save(destinationAccount);

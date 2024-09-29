@@ -4,11 +4,16 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import ru.otus.pro.hw.bank.dao.AgreementDao;
 import ru.otus.pro.hw.bank.entity.Agreement;
 
 import java.util.Optional;
+
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class AgreementServiceImplTest {
 
@@ -22,13 +27,26 @@ public class AgreementServiceImplTest {
     }
 
     @Test
+    public void testAddAgreemen() {
+
+        var agreementName = "Client1";
+        ArgumentMatcher<Agreement> argMatcher =
+                argument -> argument.getName().equals(agreementName);
+
+        agreementServiceImpl.addAgreement(agreementName);
+
+        verify(dao).save(argThat(argMatcher));
+    }
+
+
+    @Test
     public void testFindByName() {
         String name = "test";
         Agreement agreement = new Agreement();
         agreement.setId(10L);
         agreement.setName(name);
 
-        Mockito.when(dao.findByName(name)).thenReturn(
+        when(dao.findByName(name)).thenReturn(
                 Optional.of(agreement));
 
         Optional<Agreement> result = agreementServiceImpl.findByName(name);
@@ -46,8 +64,7 @@ public class AgreementServiceImplTest {
 
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
 
-        Mockito.when(dao.findByName(captor.capture())).thenReturn(
-                Optional.of(agreement));
+        when(dao.findByName(captor.capture())).thenReturn(Optional.of(agreement));
 
         Optional<Agreement> result = agreementServiceImpl.findByName(name);
 
