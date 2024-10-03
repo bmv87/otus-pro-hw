@@ -1,5 +1,6 @@
 plugins {
 	id 'java'
+	id "io.freefair.lombok" version "8.10" apply false
 }
 
 group = 'ru.otus.pro'
@@ -7,16 +8,14 @@ version = '0.0.1-SNAPSHOT'
 
 java {
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(22)
+		languageVersion = JavaLanguageVersion.of(21)
 	}
 }
-
 configurations {
 	compileOnly {
 		extendsFrom annotationProcessor
 	}
 }
-
 repositories {
 	mavenCentral()
 }
