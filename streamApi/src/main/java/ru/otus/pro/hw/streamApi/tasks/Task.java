@@ -5,15 +5,11 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class Task implements Comparable<Task> {
+public class Task {
     private Long id;
     private String name;
     private StatusEnum status;
 
-    @Override
-    public int compareTo(Task o) {
-        return this.status.compareTo(o.status);
-    }
 
     @Override
     public String toString() {

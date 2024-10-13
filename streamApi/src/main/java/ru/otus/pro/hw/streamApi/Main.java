@@ -4,11 +4,17 @@ import ru.otus.pro.hw.streamApi.tasks.StatusEnum;
 import ru.otus.pro.hw.streamApi.tasks.Task;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 public class Main {
+    private final static String ODD = "Нечетные";
+    private final static String EVEN = "Четные";
+    private final static String OTHER = "Остальные";
+    private static Comparator<Task> comparator = Comparator.comparing(Task::getStatus);
+
     public static void main(String[] args) {
         var tasksList = new ArrayList<Task>(List.of(
                 new Task(1L, "Task1", StatusEnum.OPENED),
@@ -26,58 +32,64 @@ public class Main {
                 new Task(13L, "Task13", StatusEnum.CLOSED)
         ));
 
-        doTask1(tasksList);
-        doTask2(tasksList);
-        doTask3(tasksList);
-        doTask4(tasksList);
-        doTask5(tasksList);
-        doTask6(tasksList);
+        getTasksByStatusAndPrint(tasksList);
+        countTasksByStatusAndPrint(tasksList);
+        checkTaskExistsAndPrint(tasksList);
+        getSortedTasksByStatusAndPrint(tasksList);
+        groupTasksByStatusAndParityAndPrint(tasksList);
+        groupTasksByStatusAndPrint(tasksList);
     }
 
-    private static void doTask1(List<Task> sourceTasks) {
+    private static void getTasksByStatusAndPrint(List<Task> sourceTasks) {
         System.out.println("-------------  Task1 (getTasksByStatus)  ------------");
         System.out.println("Список задач со статусом 'В работе': ");
-        getTasksByStatus(sourceTasks, StatusEnum.IN_PROCESS).forEach(t -> System.out.println(t.toString()));
+        getTasksByStatus(sourceTasks, StatusEnum.IN_PROCESS).forEach(System.out::println);
         System.out.println("-----------------------------------------------------");
     }
 
-    private static void doTask2(List<Task> sourceTasks) {
+    private static void countTasksByStatusAndPrint(List<Task> sourceTasks) {
         System.out.println("-------------  Task2 (countTasksByStatus)  ------------");
         System.out.println("Количество задач со статусом 'Закрыта': " + countTasksByStatus(sourceTasks, StatusEnum.CLOSED));
         System.out.println("-----------------------------------------------------");
     }
 
-    private static void doTask3(List<Task> sourceTasks) {
+    private static void checkTaskExistsAndPrint(List<Task> sourceTasks) {
         System.out.println("-------------  Task3 (isTaskExists isTaskNotExists)  ------------");
         System.out.println("Наличие задачи с ID = 2: " + isTaskExists(sourceTasks, 2L));
         System.out.println("Отсутствие задачи с ID = 99: " + isTaskNotExists(sourceTasks, 99L));
         System.out.println("-----------------------------------------------------");
     }
 
-    private static void doTask4(List<Task> sourceTasks) {
+    private static void getSortedTasksByStatusAndPrint(List<Task> sourceTasks) {
         System.out.println("-------------  Task4 (getSortedTasksByStatus)  ------------");
-        getSortedTasksByStatus(sourceTasks).forEach(t -> System.out.println(t.toString()));
+        getSortedTasksByStatus(sourceTasks).forEach(System.out::println);
         System.out.println("-----------------------------------------------------");
     }
 
-    private static void doTask5(List<Task> sourceTasks) {
+    private static void groupTasksByStatusAndParityAndPrint(List<Task> sourceTasks) {
         System.out.println("-------------  Task5 (groupTasksByStatusAndParity)  ------------");
-        groupTasksByStatusAndParity(sourceTasks).forEach((key, group) -> {
-            System.out.println("Группа: " + key.getDescription());
-            group.forEach((key1, value) -> {
-                System.out.println("  Группа: " + key1);
-                value.forEach(t -> System.out.println("     Задача: " + t.toString()));
-            });
-        });
+        for (var firstLevelGroup : groupTasksByStatusAndParity(sourceTasks).entrySet()) {
+            System.out.println("Группа: " + firstLevelGroup.getKey().getDescription());
+            for (var secondLevelGroup : firstLevelGroup.getValue().entrySet()) {
+                System.out.println("  Группа: " + secondLevelGroup.getKey());
+                for (var task : secondLevelGroup.getValue()) {
+                    System.out.println("     Задача: " + task.toString());
+                }
+            }
+        }
+
         System.out.println("-----------------------------------------------------");
     }
 
-    private static void doTask6(List<Task> sourceTasks) {
+    private static void groupTasksByStatusAndPrint(List<Task> sourceTasks) {
         System.out.println("-------------  Task6 (groupTasksByStatus)  ------------");
-        groupTasksByStatus(sourceTasks).forEach((key, value) -> {
-            System.out.println("Группа: " + key);
-            value.forEach(t -> System.out.println("     Задача: " + t.toString()));
-        });
+        for (var group : groupTasksByStatus(sourceTasks).entrySet()) {
+            System.out.println("Группа: " + (group.getKey() ? StatusEnum.CLOSED.getDescription() : OTHER));
+            for (var task : group.getValue()) {
+                System.out.println("     Задача: " + task.toString());
+            }
+        }
+
         System.out.println("-----------------------------------------------------");
     }
 
@@ -98,18 +110,17 @@ public class Main {
     }
 
     private static List<Task> getSortedTasksByStatus(List<Task> sourceTasks) {
-        return sourceTasks.stream().sorted().toList();
+        return sourceTasks.stream().sorted(comparator).toList();
     }
 
     private static Map<StatusEnum, Map<String, List<Task>>> groupTasksByStatusAndParity(List<Task> sourceTasks) {
-        return sourceTasks.stream().sorted().collect(Collectors.groupingBy(
+        return sourceTasks.stream().collect(Collectors.groupingBy(
                 Task::getStatus,
-                Collectors.groupingBy(t -> t.getId() % 2 == 0 ? "Четные" : "Нечетные")));
+                Collectors.groupingBy(t -> t.getId() % 2 == 0 ? EVEN : ODD)));
     }
 
-    private static Map<String, List<Task>> groupTasksByStatus(List<Task> sourceTasks) {
-        return sourceTasks.stream().sorted().collect(Collectors.groupingBy(
-                t -> t.getStatus() == StatusEnum.CLOSED ? StatusEnum.CLOSED.getDescription() : "Остальные",
-                Collectors.toList()));
+    private static Map<Boolean, List<Task>> groupTasksByStatus(List<Task> sourceTasks) {
+        return sourceTasks.stream().sorted(comparator).collect(Collectors.partitioningBy(
+                t -> t.getStatus() == StatusEnum.CLOSED));
     }
 }
