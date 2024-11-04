@@ -1,13 +1,16 @@
 package ru.otus.pro.hw.pool;
 
 import java.util.LinkedList;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class OwnThreadPool implements ExecutorService {
     private final LinkedList<Runnable> taskQueue = new LinkedList<>();
     private volatile boolean isShutdown = false;
-    private final ReentrantLock takeLock = new ReentrantLock();
-    private final ReentrantLock putLock = new ReentrantLock();
+    private final ReadWriteLock lock = new ReentrantReadWriteLock();
+    private final Lock readLock = lock.readLock();
+    private final Lock writeLock = lock.writeLock();
 
     public OwnThreadPool(int poolSize) {
         for (int i = 0; i < poolSize; i++) {
@@ -16,16 +19,13 @@ public class OwnThreadPool implements ExecutorService {
     }
 
     @Override
-    public void shutdown() throws InterruptedException {
+    public void shutdown() {
         isShutdown = true;
+        writeLock.lock();
         try {
-            takeLock.lockInterruptibly();
-            putLock.lock();
             taskQueue.clear();
-
         } finally {
-            takeLock.unlock();
-            putLock.unlock();
+            writeLock.unlock();
         }
     }
 
@@ -34,13 +34,13 @@ public class OwnThreadPool implements ExecutorService {
         if (isShutdown) {
             throw new IllegalStateException("Thread pool is shutdown");
         }
-        putLock.lock();
+        writeLock.lock();
         try {
             if (command == null)
                 throw new NullPointerException();
             taskQueue.add(command);
         } finally {
-            putLock.unlock();
+            writeLock.unlock();
         }
     }
 
@@ -50,15 +50,18 @@ public class OwnThreadPool implements ExecutorService {
         public void run() {
             while (!isShutdown) {
                 try {
-                    takeLock.lockInterruptibly();
-                    Runnable nextTask = taskQueue.poll();
-                    if (nextTask != null) {
-                        nextTask.run();
+                    readLock.lockInterruptibly();
+
+                    try {
+                        Runnable nextTask = taskQueue.poll();
+                        if (nextTask != null) {
+                            nextTask.run();
+                        }
+                    } finally {
+                        readLock.unlock();
                     }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
-                } finally {
-                    takeLock.unlock();
                 }
             }
         }

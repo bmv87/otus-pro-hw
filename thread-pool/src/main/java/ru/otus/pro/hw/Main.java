@@ -25,6 +25,6 @@ public class Main {
 
         Thread.sleep(2000);
         threadPool.shutdown();
-        System.out.println("total tasks executed" + taskCount.get());
+        System.out.println("total tasks executed " + taskCount.get());
     }
 }
