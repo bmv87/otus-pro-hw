@@ -10,7 +10,7 @@ public class Main {
 
     public static void main(String[] args) throws InterruptedException {
         ExecutorService threadPool = new OwnThreadPool(5);
-
+        Thread.sleep(2000);
         for (int i = 0; i < 100; i++) {
             threadPool.execute(() -> {
                 taskCount.incrementAndGet();
@@ -23,7 +23,7 @@ public class Main {
             });
         }
 
-        Thread.sleep(2000);
+        Thread.sleep(3000);
         threadPool.shutdown();
         System.out.println("total tasks executed " + taskCount.get());
     }

@@ -1,16 +1,15 @@
 package ru.otus.pro.hw.pool;
 
 import java.util.LinkedList;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class OwnThreadPool implements ExecutorService {
     private final LinkedList<Runnable> taskQueue = new LinkedList<>();
     private volatile boolean isShutdown = false;
-    private final ReadWriteLock lock = new ReentrantReadWriteLock();
-    private final Lock readLock = lock.readLock();
-    private final Lock writeLock = lock.writeLock();
+    private final Lock writeLock = new ReentrantLock();
+    private final Condition isNotEmptyPool = writeLock.newCondition();
 
     public OwnThreadPool(int poolSize) {
         for (int i = 0; i < poolSize; i++) {
@@ -25,6 +24,7 @@ public class OwnThreadPool implements ExecutorService {
         try {
             taskQueue.clear();
         } finally {
+            isNotEmptyPool.signalAll();
             writeLock.unlock();
         }
     }
@@ -38,8 +38,10 @@ public class OwnThreadPool implements ExecutorService {
         try {
             if (command == null)
                 throw new NullPointerException();
+                System.out.println("Write to queue " + Thread.currentThread().getName());
             taskQueue.add(command);
         } finally {
+            isNotEmptyPool.signal();
             writeLock.unlock();
         }
     }
@@ -50,15 +52,20 @@ public class OwnThreadPool implements ExecutorService {
         public void run() {
             while (!isShutdown) {
                 try {
-                    readLock.lockInterruptibly();
+                    System.out.println("Run  TaskWorker " + Thread.currentThread().getName());
+                    writeLock.lockInterruptibly();
 
+                    if (taskQueue.isEmpty() && !isShutdown) {
+                        isNotEmptyPool.await();
+                    }
+                    System.out.println("Reed from queue " + Thread.currentThread().getName());
                     try {
                         Runnable nextTask = taskQueue.poll();
                         if (nextTask != null) {
                             nextTask.run();
                         }
                     } finally {
-                        readLock.unlock();
+                        writeLock.unlock();
                     }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
