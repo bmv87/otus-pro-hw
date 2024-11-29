@@ -21,8 +21,12 @@ public class ItemsServiceProxy implements IItemsService {
                 service.saveRange(items);
                 conn.commit();
             } catch (SQLException e) {
-                conn.rollback();
-                throw e;
+                try {
+                    conn.rollback();
+                } catch (SQLException rollbackException) {
+                    throw new RuntimeException("Rollback failed", rollbackException);
+                }
+                throw new RuntimeException("Transaction failed", e);
             }
         }
     }
@@ -35,8 +39,12 @@ public class ItemsServiceProxy implements IItemsService {
                 service.editItemsPrice();
                 conn.commit();
             } catch (SQLException e) {
-                conn.rollback();
-                throw e;
+                try {
+                    conn.rollback();
+                } catch (SQLException rollbackException) {
+                    throw new RuntimeException("Rollback failed", rollbackException);
+                }
+                throw new RuntimeException("Transaction failed", e);
             }
         }
     }
