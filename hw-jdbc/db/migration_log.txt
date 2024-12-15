@@ -1,0 +1,3 @@
+/migrations/init.sql
+/migrations/fill_users.sql
+/migrations/fill_accounts.sql
