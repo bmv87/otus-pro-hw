@@ -1,4 +1,4 @@
-package hw.jdbc;
+package hw.jdbc.suorce;
 
 import lombok.Getter;
 
@@ -44,9 +44,9 @@ public class ConnectionPool {
             if (options.getDatabase() != null) {
                 url = url + options.getDatabase();
             }
-            System.out.println(url);
+            // System.out.println(url);
             var conn = DriverManager.getConnection(url, parameters);
-            System.out.println(conn.getCatalog());
+            // System.out.println(conn.getCatalog());
             if (connectionQueue.add(new PConnection(conn))) {
                 totalCount.incrementAndGet();
                 return true;
@@ -60,9 +60,15 @@ public class ConnectionPool {
 
     public void shutdown() {
         lock.lock();
-        while (connectionQueue.isEmpty()) {
+        while (!connectionQueue.isEmpty()) {
             try {
                 connectionQueue.poll().getConnection().close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        while (!connectionInUse.isEmpty()) {
+            try {
                 connectionInUse.poll().getConnection().close();
             } catch (SQLException e) {
                 e.printStackTrace();

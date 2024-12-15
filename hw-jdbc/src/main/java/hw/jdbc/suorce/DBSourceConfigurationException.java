@@ -1,4 +1,4 @@
-package hw.jdbc;
+package hw.jdbc.suorce;
 
 public class DBSourceConfigurationException extends RuntimeException {
     public DBSourceConfigurationException(String configName, String configValue) {

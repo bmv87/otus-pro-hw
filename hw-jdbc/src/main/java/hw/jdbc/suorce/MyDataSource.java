@@ -1,11 +1,11 @@
-package hw.jdbc;
+package hw.jdbc.suorce;
 
 import lombok.Getter;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 
-public final class MyDataSource {
+public final class MyDataSource implements AutoCloseable{
 
 
     @Getter

@@ -1,4 +1,4 @@
-package hw.jdbc;
+package hw.jdbc.suorce;
 
 import lombok.Getter;
 import lombok.Setter;

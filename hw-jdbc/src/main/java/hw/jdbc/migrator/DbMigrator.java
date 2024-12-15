@@ -1,7 +1,6 @@
 package hw.jdbc.migrator;
 
-import hw.jdbc.MyDataSource;
-import lombok.AllArgsConstructor;
+import hw.jdbc.suorce.MyDataSource;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -24,8 +23,6 @@ public class DbMigrator {
     private MyDataSource dataSource;
     private MigratorOptions options;
     private static Pattern COMMENT_PATTERN = Pattern.compile("–.*|/\\*(.|[\\r\\n])*?\\*/");
-    // private static String EXIST_DB_REQUEST = "SELECT 1 AS result FROM
-    // pg_catalog.pg_database WHERE datname = ?;";
     private static String CHECK_DB_REQUEST = "SELECT datname FROM pg_catalog.pg_database WHERE datname = ?;";
     private static String CHECK_MIGRATION_REQUEST = "SELECT title, checksum FROM <table> ORDER BY id;";
     private static String CREATE_DB_REQUEST = "CREATE DATABASE <db>;";
@@ -58,7 +55,7 @@ public class DbMigrator {
         this.dataSource = dataSource;
         this.options = options;
     }
-  
+
     private Connection connectToPostgresDB() throws SQLException {
         var connOptions = MyDataSource.getOptions();
         Properties parameters = new Properties();
@@ -70,7 +67,7 @@ public class DbMigrator {
             parameters.put("password", connOptions.getPassword());
         }
         // if (connOptions.getDatabase() != null) {
-        //     parameters.put("database", "postgres");
+        // parameters.put("database", "postgres");
         // }
         return DriverManager.getConnection(connOptions.getUrl(), parameters);
     }
@@ -130,11 +127,12 @@ public class DbMigrator {
         if (migrationScripts.isEmpty() || migrationScripts.stream().allMatch(ms -> ms.getScripts().isEmpty())) {
             return;
         }
-        var addedBefore = migrationScripts.stream().filter(m -> m.isMigrationExists()).count();
+        long countForAdd = 0;
 
         try (var conn = dataSource.getConnection()) {
             conn.setAutoCommit(false);
             checkMigrations(conn, migrationScripts);
+            countForAdd = migrationScripts.stream().filter(m -> !m.isMigrationExists()).count();
             for (var info : migrationScripts) {
                 if (info.isMigrationExists()) {
                     System.out.println("Migration alredy exists " + info.getFileName());
@@ -156,9 +154,9 @@ public class DbMigrator {
             }
         }
         var totalCount = migrationScripts.size();
-        var addedAfter = migrationScripts.stream().filter(m -> m.isMigrationExists()).count();
+        var notAddedAfter = migrationScripts.stream().filter(m -> !m.isMigrationExists()).count();
         System.out.println("Total migrations " + totalCount);
-        System.out.println("Success migrations " + (addedAfter - addedBefore));
+        System.out.println("Success migrations " + (countForAdd - notAddedAfter));
     }
 
     private void checkMigrations(Connection connection, List<ScriptInfo> migrations) throws SQLException {
@@ -177,8 +175,8 @@ public class DbMigrator {
                             + options.getMigrationLogFile());
                 }
                 var info = migrations.get(index);
-
-                if (!info.getFileName().equals(title)) {
+                System.out.println(info.getFileName() + " - " + title);
+                if (!info.getFileName().toLowerCase().equals(title.toLowerCase())) {
                     throw new MigratorException("Исходная последовательность миграций изменена в файле "
                             + options.getMigrationLogFile());
                 }
@@ -187,6 +185,7 @@ public class DbMigrator {
                     throw new MigratorException("Файл миграции был изменен.");
                 }
                 info.setMigrationExists(true);
+                ++index;
             }
         }
     }
@@ -198,6 +197,7 @@ public class DbMigrator {
 
             for (String sql : sqlStatements) {
                 statement.addBatch(sql);
+                System.out.println(sql);
                 count++;
 
                 if (count % batchSize == 0) {
@@ -239,7 +239,7 @@ public class DbMigrator {
 
                 if (line.endsWith(";")) {
                     sqlStatements.add(currentStatement.toString());
-                    System.out.println(currentStatement.toString());
+                    // System.out.println(currentStatement.toString());
                     currentStatement.setLength(0);
                 }
             }
