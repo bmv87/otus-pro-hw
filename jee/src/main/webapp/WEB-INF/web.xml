@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
+         id="WebApp_ID" version="4.0">
+
+  <display-name>Archetype Created Web Application</display-name>
+<!--  <filter>-->
+<!--    <filter-name>CalculatorFilter</filter-name>-->
+<!--    <filter-class>ru.otus.pro.hw.jee.web.calculator.CalculatorFilter</filter-class>-->
+<!--    <init-param>-->
+<!--      <param-name>active</param-name>-->
+<!--      <param-value>true</param-value>-->
+<!--    </init-param>-->
+<!--  </filter>-->
+
+<!--  <filter-mapping>-->
+<!--    <filter-name>CalculatorFilter</filter-name>-->
+<!--    <servlet-name>AddServlet</servlet-name>-->
+<!--  </filter-mapping>-->
+<!--  <filter-mapping>-->
+<!--    <filter-name>CalculatorFilter</filter-name>-->
+<!--    <servlet-name>DivideServlet</servlet-name>-->
+<!--  </filter-mapping>-->
+  <servlet>
+    <servlet-name>AddServlet</servlet-name>
+    <servlet-class>ru.otus.pro.hw.jee.web.calculator.AddServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>AddServlet</servlet-name>
+    <url-pattern>/calculator/add</url-pattern>
+  </servlet-mapping>
+  <servlet>
+    <servlet-name>DivideServlet</servlet-name>
+    <servlet-class>ru.otus.pro.hw.jee.web.calculator.DivideServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>DivideServlet</servlet-name>
+    <url-pattern>/calculator/div</url-pattern>
+  </servlet-mapping>
+  <servlet>
+    <servlet-name>MultiplyServlet</servlet-name>
+    <servlet-class>ru.otus.pro.hw.jee.web.calculator.MultiplyServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>MultiplyServlet</servlet-name>
+    <url-pattern>/calculator/multiply</url-pattern>
+  </servlet-mapping>
+  <servlet>
+    <servlet-name>SubtractServlet</servlet-name>
+    <servlet-class>ru.otus.pro.hw.jee.web.calculator.SubtractServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>SubtractServlet</servlet-name>
+    <url-pattern>/calculator/subtract</url-pattern>
+  </servlet-mapping>
+  <servlet>
+    <servlet-name>FirstServlet</servlet-name>
+    <servlet-class>ru.otus.pro.hw.jee.web.FirstServlet</servlet-class>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>FirstServlet</servlet-name>
+    <url-pattern>/first_servlet</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>SecondServlet</servlet-name>
+    <servlet-class>ru.otus.pro.hw.jee.web.SecondServlet</servlet-class>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>SecondServlet</servlet-name>
+    <url-pattern>/sec</url-pattern>
+  </servlet-mapping>
+</web-app>
