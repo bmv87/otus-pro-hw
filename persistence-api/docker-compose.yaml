@@ -1,0 +1,21 @@
+version: '3.4'
+
+services:
+  postgres:
+    image: postgres:16.4-alpine3.20
+    container_name: 'persistence-api'
+    volumes:
+      - persistence:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    environment:
+      - 'POSTGRES_USER=postgres'
+      - 'POSTGRES_PASSWORD=postgres'
+      - 'POSTGRES_DB=persistence'
+
+volumes:
+  persistence:
+
+networks:
+  postgres:
+    driver: bridge
