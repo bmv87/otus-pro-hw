@@ -1,0 +1,32 @@
+plugins {
+    id 'java'
+}
+
+group = 'ru.otus.pro.hw'
+version = '0.0.1-SNAPSHOT'
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+repositories {
+    mavenCentral()
+    maven { url 'https://repo.maven.apache.org/maven2/' }
+}
+
+
+dependencies {
+    runtimeOnly 'org.postgresql:postgresql:42.7.3'
+    implementation 'org.hibernate.orm:hibernate-core:6.6.4.Final'
+
+    compileOnly 'org.projectlombok:lombok:1.18.34'
+    annotationProcessor 'org.projectlombok:lombok:1.18.34'
+
+    testCompileOnly 'org.projectlombok:lombok:1.18.34'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.34'
+}

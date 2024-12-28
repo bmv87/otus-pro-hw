@@ -1,1 +1,4 @@
 rootProject.name = 'otus-pro-hw'
+include 'jpql'
+
+include 'persistence-api'
