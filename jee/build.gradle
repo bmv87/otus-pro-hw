@@ -1,0 +1,70 @@
+buildscript {
+    repositories {
+        gradlePluginPortal()
+    }
+
+    dependencies {
+        classpath 'com.bmuschko:gradle-cargo-plugin:2.9.0'
+    }
+}
+
+plugins {
+    id 'java'
+    id 'war'
+}
+apply plugin: 'com.bmuschko.cargo'
+group = 'ru.otus.pro.hw'
+version = '0.0.1-SNAPSHOT'
+description = 'JEE Maven WebApp'
+java.sourceCompatibility = JavaVersion.VERSION_18
+
+repositories {
+    maven { url "https://plugins.gradle.org/m2/" }
+    mavenCentral()
+    gradlePluginPortal()
+}
+configurations {
+    // Create new dependency configuration
+    // for dependencies to be added in
+    // WAR file.
+    warLib.extendsFrom runtime
+}
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+dependencies {
+    warLib 'org.reflections:reflections:0.10.2'
+    warLib 'com.google.code.gson:gson:2.11.0'
+    warLib 'org.apache.logging.log4j:log4j-core:2.24.3'
+    warLib 'org.apache.logging.log4j:log4j-api:2.24.3'
+    implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.24.3'
+    implementation 'javax.servlet:javax.servlet-api:4.0.1'
+
+    compileOnly 'org.projectlombok:lombok:1.18.34'
+    annotationProcessor 'org.projectlombok:lombok:1.18.34'
+}
+
+war {
+    classpath configurations.warLib
+    classpath = classpath.files
+    archiveFileName = 'jee.war'
+    enabled=true
+}
+cargo {
+    containerId = 'tomcat9x'
+    port = 8081
+
+    deployable {
+        file = file('/build/libs/jee.war')
+        context = '/jee'
+    }
+
+    remote {
+        hostname = 'localhost'
+        username = 'admin'
+        password = 'admin'
+    }
+}
