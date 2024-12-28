@@ -1,0 +1,11 @@
+server:
+  port: 8189
+spring:
+  application:
+    name: products
+
+response:
+  exceptions:
+    needStack: true
+
+
