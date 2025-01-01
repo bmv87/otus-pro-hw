@@ -1,0 +1,27 @@
+server:
+  port: 8189
+  servlet:
+    context-path: /api
+response:
+  exceptions:
+    needStack: true
+spring:
+  application:
+    name: products
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/persistence
+    username: postgres
+    password: postgres
+  jpa:
+    database: POSTGRESQL
+    show-sql: true
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    url: jdbc:postgresql://localhost:5432/persistence
+    user: postgres
+    password: postgres
+logging:
+  level:
+    org.springframework.jdbc.core.JdbcTemplate: TRACE
