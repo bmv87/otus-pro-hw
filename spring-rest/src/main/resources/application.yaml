@@ -1,0 +1,25 @@
+server:
+  port: 8189
+  servlet:
+    context-path: /rest
+response:
+  exceptions:
+    needStack: false
+spring:
+  application:
+    name: spring-rest
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/persistence
+    username: postgres
+    password: postgres
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    url: jdbc:postgresql://localhost:5432/persistence
+    user: postgres
+    password: postgres
+
