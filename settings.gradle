@@ -1,1 +1,3 @@
 rootProject.name = 'otus-pro-hw'
+include 'web-server'
+
