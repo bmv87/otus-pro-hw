@@ -2,10 +2,8 @@ package hw.jdbc.repositories;
 
 import hw.jdbc.suorce.MyDataSource;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,11 +14,11 @@ import java.util.stream.Collectors;
 public class AbstractRepository<T> {
     private MyDataSource dataSource;
 
-    private PreparedStatement psCreate;
-    private PreparedStatement psUpdate;
-    private PreparedStatement psDelete;
-    private PreparedStatement psFindById;
-    private PreparedStatement psSelectAll;
+    private String sCreate;
+    private String sUpdate;
+    private String sDelete;
+    private String sFindById;
+    private String sSelectAll;
 
     private EntityInfo<T> entityInfo;
 
@@ -31,7 +29,8 @@ public class AbstractRepository<T> {
     }
 
     public void create(T entity) {
-        try {
+        try (var conn = dataSource.getConnection(); var psCreate = conn.prepareStatement(sCreate)) {
+            conn.setAutoCommit(false);
             var createFields = getCreateFields().entrySet();
             int paramIndex = 0;
 
@@ -40,6 +39,7 @@ public class AbstractRepository<T> {
                 ++paramIndex;
             }
             psCreate.executeUpdate();
+            conn.commit();
         } catch (SQLException e) {
             throw new DBOperationException(e);
         } catch (IllegalAccessException | InvocationTargetException e) {
@@ -48,7 +48,7 @@ public class AbstractRepository<T> {
     }
 
     public List<T> findAll() {
-        try {
+        try (var conn = dataSource.getConnection(); var psSelectAll = conn.prepareStatement(sSelectAll)) {
             var fields = entityInfo.getFields().entrySet();
 
             var resultSet = psSelectAll.executeQuery();
@@ -66,13 +66,13 @@ public class AbstractRepository<T> {
         } catch (SQLException e) {
             throw new DBOperationException(e);
         } catch (IllegalAccessException | InvocationTargetException | InstantiationException
-                | NoSuchMethodException e) {
+                 | NoSuchMethodException e) {
             throw new ApplicationInitializationException();
         }
     }
 
     public Optional<T> findById(Object... keys) {
-        try {
+        try (var conn = dataSource.getConnection(); var psFindById = conn.prepareStatement(sFindById)) {
             var fields = entityInfo.getFields().entrySet();
             int paramIndex = 0;
 
@@ -93,13 +93,14 @@ public class AbstractRepository<T> {
         } catch (SQLException e) {
             throw new DBOperationException(e);
         } catch (IllegalAccessException | InvocationTargetException | InstantiationException
-                | NoSuchMethodException e) {
+                 | NoSuchMethodException e) {
             throw new ApplicationInitializationException();
         }
     }
 
     public void update(T entity) {
-        try {
+        try (var conn = dataSource.getConnection(); var psUpdate = conn.prepareStatement(sUpdate)) {
+            conn.setAutoCommit(false);
             var updateFields = getUpdateFields().entrySet();
             int paramIndex = 0;
 
@@ -111,6 +112,7 @@ public class AbstractRepository<T> {
                 psUpdate.setObject(paramIndex + 1, keyField.getValue().invoke(entity));
             }
             psUpdate.executeUpdate();
+            conn.commit();
         } catch (SQLException e) {
             throw new DBOperationException(e);
         } catch (IllegalAccessException | InvocationTargetException e) {
@@ -119,7 +121,8 @@ public class AbstractRepository<T> {
     }
 
     public void delete(Object... keys) {
-        try {
+        try (var conn = dataSource.getConnection(); var psDelete = conn.prepareStatement(sDelete)) {
+            conn.setAutoCommit(false);
             int paramIndex = 0;
 
             for (var key : keys) {
@@ -127,6 +130,7 @@ public class AbstractRepository<T> {
                 ++paramIndex;
             }
             psDelete.executeUpdate();
+            conn.commit();
         } catch (SQLException e) {
             throw new DBOperationException(e);
         }
@@ -143,10 +147,10 @@ public class AbstractRepository<T> {
     private Map<String, Method> getCreateFields() {
         return entityInfo.getKeyFields().size() == 1
                 ? entityInfo.getFields().entrySet().stream()
-                        .filter(f -> !entityInfo.getKeyFields().containsKey(f.getKey()))
-                        .collect(Collectors.toMap(Map.Entry::getKey, f -> f.getValue().getGetter()))
+                .filter(f -> !entityInfo.getKeyFields().containsKey(f.getKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey, f -> f.getValue().getGetter()))
                 : entityInfo.getFields().entrySet().stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey, f -> f.getValue().getGetter()));
+                .collect(Collectors.toMap(Map.Entry::getKey, f -> f.getValue().getGetter()));
     }
 
     private Map<String, Method> getUpdateFields() {
@@ -160,11 +164,7 @@ public class AbstractRepository<T> {
         StringBuilder query = new StringBuilder("SELECT * FROM ");
         query.append(tableName);
         query.append(";");
-        try {
-            psSelectAll = dataSource.getConnection().prepareStatement(query.toString());
-        } catch (SQLException e) {
-            throw new ApplicationInitializationException();
-        }
+        sSelectAll = query.toString();
     }
 
     private void prepareDelete() {
@@ -176,11 +176,7 @@ public class AbstractRepository<T> {
         }
         query.setLength(query.length() - 5);
         query.append(";");
-        try {
-            psDelete = dataSource.getConnection().prepareStatement(query.toString());
-        } catch (SQLException e) {
-            throw new ApplicationInitializationException();
-        }
+        sDelete = query.toString();
     }
 
     private void prepareFindById() {
@@ -192,11 +188,7 @@ public class AbstractRepository<T> {
         }
         query.setLength(query.length() - 5);
         query.append(";");
-        try {
-            psFindById = dataSource.getConnection().prepareStatement(query.toString());
-        } catch (SQLException e) {
-            throw new ApplicationInitializationException();
-        }
+        sFindById = query.toString();
     }
 
     private void prepareUpdate() {
@@ -215,11 +207,7 @@ public class AbstractRepository<T> {
         query.setLength(query.length() - 5);
         query.append(";");
         System.out.println(query.toString());
-        try {
-            psUpdate = dataSource.getConnection().prepareStatement(query.toString());
-        } catch (SQLException e) {
-            throw new ApplicationInitializationException();
-        }
+        sUpdate = query.toString();
     }
 
     private void prepareInsert() {
@@ -229,8 +217,8 @@ public class AbstractRepository<T> {
         // 'insert into users ('
         var createFields = entityInfo.getKeyFields().size() == 1
                 ? entityInfo.getFields().entrySet().stream()
-                        .filter(f -> !entityInfo.getKeyFields().containsKey(f.getKey()))
-                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
+                .filter(f -> !entityInfo.getKeyFields().containsKey(f.getKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
                 : entityInfo.getFields();
 
         for (var f : createFields.entrySet()) {
@@ -248,10 +236,7 @@ public class AbstractRepository<T> {
         // 'insert into users (login, password, nickname) values (?, ?, ?'
         query.append(");");
         System.out.println(query.toString());
-        try {
-            psCreate = dataSource.getConnection().prepareStatement(query.toString());
-        } catch (SQLException e) {
-            throw new ApplicationInitializationException();
-        }
+
+        sCreate = query.toString();
     }
 }
