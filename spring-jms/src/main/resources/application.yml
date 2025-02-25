@@ -1,0 +1,15 @@
+# PRODUCER SERVER PORT
+server:
+  port: 8187
+
+# ARTEMIS ACTIVEMQ CONFIGURATION
+spring:
+  activemq:
+    broker-url: tcp://localhost:61616
+    user: user
+    password: 123456
+    packages:
+      trust-all: true
+  artemis:
+    embedded:
+      queues: messages
